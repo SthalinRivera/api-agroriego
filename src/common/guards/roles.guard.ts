@@ -24,16 +24,16 @@ export class RolesGuard implements CanActivate {
         }
 
         // Obtener el usuario de la BD con sus roles
-        const dbUser = await this.prisma.usuarios.findFirst({
-            where: { email: user.email, estado: true },
-            include: { usuarios_roles: { include: { roles_usuarios: true } } },
+        const dbUser = await this.prisma.profiles.findFirst({
+            where: { users: { is: { email: user.email } }, activo: true },
+            include: { roles: true },
         });
 
         if (!dbUser) {
             throw new ForbiddenException('Usuario no registrado en el sistema');
         }
 
-        const userRoles = dbUser.usuarios_roles.map(ur => ur.roles_usuarios.nombre);
+        const userRoles = [dbUser.roles.nombre, dbUser.roles.codigo];
         const hasRole = requiredRoles.some(role => userRoles.includes(role));
 
         if (!hasRole) {

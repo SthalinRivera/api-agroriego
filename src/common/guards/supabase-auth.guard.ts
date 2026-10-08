@@ -1,65 +1,50 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { createClient } from '@supabase/supabase-js';
-import { PrismaService } from '../../config/prisma/prisma.service';
+// src/common/guards/supabase-auth.guard.ts
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class SupabaseAuthGuard implements CanActivate {
-  private supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_ANON_KEY!
-  );
+  private supabase: SupabaseClient;
 
-  constructor(private prisma: PrismaService) { }
+  constructor() {
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY;
+
+    if (!url || !key) {
+      // Imprime lo que SÍ ve, para depurar
+      console.error('❌ Env check:', {
+        SUPABASE_URL: url ? 'OK' : 'MISSING',
+        SUPABASE_ANON_KEY_OR_SUPABASE_KEY: key ? 'OK' : 'MISSING',
+        keys_visibles: Object.keys(process.env).filter((k) =>
+          k.startsWith('SUPABASE'),
+        ),
+      });
+      throw new Error('Faltan SUPABASE_URL y/o SUPABASE_ANON_KEY (o SUPABASE_KEY) en .env');
+    }
+
+    this.supabase = createClient(url, key);
+  }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const authHeader = request.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
+    const req = context.switchToHttp().getRequest();
+    const auth = req.headers.authorization;
+
+    if (!auth?.startsWith('Bearer ')) {
       throw new UnauthorizedException('Token no proporcionado');
     }
-    const token = authHeader.split(' ')[1];
 
-    // 1. Validar token con Supabase
-    const { data: { user }, error } = await this.supabase.auth.getUser(token);
-    if (error || !user) {
+    const { data, error } = await this.supabase.auth.getUser(auth.slice(7));
+
+    if (error || !data.user) {
       throw new UnauthorizedException('Token inválido');
     }
 
-    // 2. Buscar o crear usuario en tabla local
-    let dbUser = await this.prisma.usuarios.findFirst({
-      where: {
-        OR: [
-          { google_uid: user.id },
-          { email: user.email },
-        ],
-      },
-    });
-
-    if (!dbUser) {
-      // Empresa por defecto (ajusta según tu lógica)
-      const empresaPorDefecto = 1;
-      const sedePorDefecto = 1;
-
-      dbUser = await this.prisma.usuarios.create({
-        data: {
-          email: user.email!,
-          nombres: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
-          google_uid: user.id,
-          id_empresa: empresaPorDefecto,
-          id_sede: sedePorDefecto,
-          estado: true,
-        },
-      });
-    }
-
-    // 3. Asignar en request.user los datos de la tabla local
-    request.user = {
-      id_usuario: Number(dbUser.id_usuario),
-      id_empresa: Number(dbUser.id_empresa),
-      email: dbUser.email,
-      nombres: dbUser.nombres,
-    };
-
+    req.user = data.user;
     return true;
   }
 }

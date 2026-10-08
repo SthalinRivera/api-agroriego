@@ -1,30 +1,42 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';          // ← 1. importar
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
-
-import { EmpresasModule } from './modules/empresas/empresas.module';
-import { UsuariosModule } from './modules/usuarios/usuarios.module';
-import { RolesUsuariosModule } from './modules/roles-usuarios/roles-usuarios.module';
-import { ClientesModule } from './modules/clientes/clientes.module';
-import { FrutasModule } from './modules/frutas/frutas.module';
-import { VariedadesModule } from './modules/variedades/variedades.module';
-import { CalidadesModule } from './modules/calidades/calidades.module';
-import { TiposJabaModule } from './modules/tipos-jaba/tipos-jaba.module';
-import { SedesModule } from './modules/sedes/sedes.module';
-import { CamionesModule } from './modules/camiones/camiones.module';
-import { LugaresOperativosModule } from './modules/lugares-operativos/lugares-operativos.module';
-import { PuestosModule } from './modules/puestos/puestos.module';
-import { OperacionesCargaModule } from './modules/operaciones-carga/operaciones-carga.module';
-import { DetalleCargaModule } from './modules/detalle-carga/detalle-carga.module';
-import { ItemsRepartoModule } from './modules/items-reparto/items-reparto.module';
-import { GuiasOperativasModule } from './modules/guias-operativas/guias-operativas.module';
-import { EntregasModule } from './modules/entregas/entregas.module';
-import { DashboardModule } from './modules/dashboard/dashboard.module';
-import { IncidenciasModule } from './modules/incidencias/incidencias.module';
+import { ParcelasModule } from './modules/parcelas/parcelas.module';
+import { DispositivosModule } from './modules/dispositivos/dispositivos.module';
+import { SensoresModule } from './modules/sensores/sensores.module';
+import { LecturasModule } from './modules/lecturas/lecturas.module';
+import { AlertasModule } from './modules/alertas/alertas.module';
+import { PrediccionesModule } from './modules/predicciones/predicciones.module';
+import { CultivosModule } from './modules/cultivos/cultivos.module';
+import { RiegosModule } from './modules/riegos/riegos.module';
+import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
+import { ConfiguracionAlertasModule } from './modules/configuracion-alertas/configuracion-alertas.module';
+import { ModelosIAModule } from './modules/modelos-ia/modelos-ia.module';
+import { ReportesModule } from './modules/reportes/reportes.module';
 
 @Module({
-  imports: [AuthModule, EmpresasModule, UsuariosModule, RolesUsuariosModule, ClientesModule, FrutasModule, VariedadesModule, CalidadesModule, TiposJabaModule, SedesModule, CamionesModule, LugaresOperativosModule, PuestosModule, OperacionesCargaModule, DetalleCargaModule, ItemsRepartoModule, GuiasOperativasModule, EntregasModule, DashboardModule, IncidenciasModule],
+  imports: [
+    ConfigModule.forRoot({          // ← 2. PRIMERO, antes que todo
+      isGlobal: true,
+      envFilePath: '.env',
+      cache: true,
+    }),
+    AuthModule,
+    ParcelasModule,
+    DispositivosModule,
+    SensoresModule,
+    LecturasModule,
+    AlertasModule,
+    PrediccionesModule,
+    CultivosModule,
+    RiegosModule,
+    NotificacionesModule,
+    ConfiguracionAlertasModule,
+    ModelosIAModule,
+    ReportesModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
