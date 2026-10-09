@@ -29,7 +29,6 @@ export class SupabaseAuthGuard implements CanActivate {
 
     this.supabase = createClient(url, key);
   }
-
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const auth = req.headers.authorization;
@@ -38,12 +37,30 @@ export class SupabaseAuthGuard implements CanActivate {
       throw new UnauthorizedException('Token no proporcionado');
     }
 
-    const { data, error } = await this.supabase.auth.getUser(auth.slice(7));
+    const token = auth.slice(7).trim(); // 👈 .trim() por si hay espacios/saltos
 
-    if (error || !data.user) {
-      throw new UnauthorizedException('Token inválido');
+    // Log de diagnóstico
+    console.log('🔍 Token recibido (primeros 40):', token.substring(0, 40));
+    console.log('🔍 Token length:', token.length);
+    console.log('🔍 SUPABASE_URL:', process.env.SUPABASE_URL);
+
+    const { data, error } = await this.supabase.auth.getUser(token);
+
+    if (error) {
+      console.error('❌ Error de Supabase getUser:', {
+        message: error.message,
+        status: (error as any).status,
+        name: error.name,
+      });
+      throw new UnauthorizedException(`Token inválido: ${error.message}`);
     }
 
+    if (!data.user) {
+      console.error('❌ data.user es null pero sin error');
+      throw new UnauthorizedException('Token inválido: usuario no encontrado');
+    }
+
+    console.log('✅ Usuario autenticado:', data.user.id, data.user.email);
     req.user = data.user;
     return true;
   }

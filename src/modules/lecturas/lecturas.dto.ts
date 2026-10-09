@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, IsArray, ValidateNested, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, IsArray, ValidateNested, IsDateString, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -105,4 +105,15 @@ export class LatestLecturasQueryDto {
   @IsOptional()
   @IsUUID()
   parcelaId?: string;
+}
+export class MoistureTrendQueryDto {
+  @ApiProperty()
+  @IsUUID()
+  sensorId!: string;
+
+  @ApiPropertyOptional({ enum: [7, 30, 365], default: 7 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsIn([7, 30, 365])
+  days: number = 7;
 }

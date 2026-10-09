@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, Query, UseGuards, Req } from '@nest
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { LecturasService } from './lecturas.service';
-import { CreateLecturaDto, BatchLecturasDto, LecturaQueryDto, LatestLecturasQueryDto } from './lecturas.dto';
+import { CreateLecturaDto, BatchLecturasDto, LecturaQueryDto, LatestLecturasQueryDto, MoistureTrendQueryDto } from './lecturas.dto';
 
 @ApiTags('Lecturas')
 @ApiBearerAuth()
@@ -29,6 +29,11 @@ export class LecturasController {
     return this.lecturasService.findAll(query, req.user.id);
   }
 
+  @Get('tendencia-humedad')
+  @ApiOperation({ summary: 'Humedad media por hora (7 días) o día (30/365 días)' })
+  async moistureTrend(@Query() query: MoistureTrendQueryDto, @Req() req: any) {
+    return this.lecturasService.moistureTrend(query, req.user.id);
+  }
   @Get('latest')
   @ApiOperation({ summary: 'Obtener últimas lecturas' })
   async findLatest(@Query() query: LatestLecturasQueryDto, @Req() req: any) {

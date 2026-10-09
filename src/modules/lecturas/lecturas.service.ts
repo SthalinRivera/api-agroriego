@@ -1,11 +1,50 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
-import { CreateLecturaDto, BatchLecturasDto, LecturaQueryDto, LatestLecturasQueryDto } from './lecturas.dto';
+import { CreateLecturaDto, BatchLecturasDto, LecturaQueryDto, LatestLecturasQueryDto, MoistureTrendQueryDto } from './lecturas.dto';
 
 @Injectable()
 export class LecturasService {
   constructor(private prisma: PrismaService) {}
 
+  async moistureTrend(query: MoistureTrendQueryDto, userId: string) {
+    const { sensorId, days = 7 } = query;
+    if (![7, 30, 365].includes(days)) throw new BadRequestException('Periodo no válido');
+    const sensor = await this.prisma.sensores.findUnique({
+      where: { id: sensorId },
+      include: { tipos_sensor: true, dispositivos: { include: { parcelas: true } } },
+    });
+    if (!sensor) throw new NotFoundException('Sensor no encontrado');
+    const owner = sensor.dispositivos.parcelas.propietario_id === userId;
+    const member = owner || await this.prisma.parcela_usuarios.findUnique({
+      where: { parcela_id_usuario_id: {
+        parcela_id: sensor.dispositivos.parcela_id, usuario_id: userId,
+      } },
+    });
+    if (!member) throw new ForbiddenException('No tienes acceso a este sensor');
+    if (!['humedad_suelo', 'soil_moisture'].includes(sensor.tipos_sensor.codigo.toLowerCase())) {
+      throw new BadRequestException('El sensor no mide humedad del suelo');
+    }
+    const until = new Date();
+    const since = new Date(until.getTime() - days * 86400000);
+    const interval = days === 7 ? 'hour' : 'day';
+    // Parameters are bound by Prisma. Aggregate in PostgreSQL, never download
+    // a year of raw readings. Empty buckets remain absent, not artificial zeros.
+    const rows = await this.prisma.$queryRaw<Array<{
+      recorded_at: Date; valor: unknown;
+    }>>`
+      SELECT MAX(recorded_at) AS recorded_at, AVG(valor) AS valor
+      FROM public.lecturas
+      WHERE sensor_id = ${sensorId}::uuid
+        AND recorded_at >= ${since} AND recorded_at <= ${until}
+      GROUP BY date_trunc(${interval}::text, recorded_at AT TIME ZONE 'America/Lima')
+      ORDER BY recorded_at ASC
+    `;
+    return {
+      sensorId, days, aggregation: interval, timezone: 'America/Lima',
+      desde: since.toISOString(), hasta: until.toISOString(),
+      data: rows.map(row => ({ recorded_at: row.recorded_at, valor: Number(row.valor) })),
+    };
+  }
   async create(dto: CreateLecturaDto, userId: string) {
     // Verificar que el sensor existe y pertenece al usuario
     const sensor = await this.prisma.sensores.findUnique({
