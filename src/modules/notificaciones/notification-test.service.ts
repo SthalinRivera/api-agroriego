@@ -1,3 +1,4 @@
+import { safeFcmCode, fcmFailureHint } from './firebase-config';
 import { BadRequestException, HttpException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { FcmService } from './fcm.service';
@@ -31,14 +32,15 @@ export class NotificationTestService {
           where: { id: device.id, usuario_id: userId, fcm_token: device.fcm_token }, data: { activo: false },
         });
         return result;
-      } catch { return 'failed'; }
+      } catch (error) { return safeFcmCode(error); }
     }));
+    const errorCodes = [...new Set(outcomes.filter(result => result !== 'sent').map(result => result === 'invalid' ? 'messaging/registration-token-not-registered' : result))];
     const sent = outcomes.filter(result => result === 'sent').length;
     const failed = outcomes.length - sent;
     await this.prisma.notificaciones.update({ where: { id: notification.id }, data: {
-      data: { prioridad: 'baja', prueba: true, push: { status: sent ? (failed ? 'test_partial' : 'test_sent') : 'test_failed', sent, failed } },
+      data: { prioridad: 'baja', prueba: true, push: { status: sent ? (failed ? 'test_partial' : 'test_sent') : 'test_failed', sent, failed, errorCodes } },
     } });
-    if (!sent) throw new ServiceUnavailableException('La prueba quedó en el historial, pero no se pudo enviar el push. Revisa los permisos del teléfono y la configuración Firebase del servidor.');
+    if (!sent) throw new ServiceUnavailableException({ message: 'La prueba quedó en el historial, pero no se pudo enviar el push. ' + fcmFailureHint(errorCodes[0]), code: errorCodes[0] });
     return { id: notification.id, sent, failed, message: failed
       ? `Prueba aceptada por Firebase para ${sent} dispositivo(s); ${failed} no pudieron recibir el envío.`
       : 'Prueba aceptada por Firebase. Comprueba tu teléfono y el historial.' };

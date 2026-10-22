@@ -1,5 +1,6 @@
+import { firebaseCredential, safeFcmCode } from './firebase-config';
 import { Injectable, Logger } from '@nestjs/common';
-import { applicationDefault, getApps, initializeApp } from 'firebase-admin/app';
+import { getApps, initializeApp } from 'firebase-admin/app';
 import { getMessaging } from 'firebase-admin/messaging';
 
 @Injectable()
@@ -8,11 +9,11 @@ export class FcmService {
   get enabled() { return process.env.FCM_ENABLED === 'true'; }
   async send(token: string, notification: { id: string; usuario_id: string; titulo: string; mensaje: string | null }, prioridad: string) {
     if (!this.enabled) throw new Error('FCM_DISABLED');
+    try {
     const app = getApps().find(a => a.name === 'agro-notifications') ?? initializeApp({
-      credential: applicationDefault(), projectId: process.env.FIREBASE_PROJECT_ID,
+      credential: firebaseCredential(), projectId: process.env.FIREBASE_PROJECT_ID,
       httpAgent: undefined,
     }, 'agro-notifications');
-    try {
       await getMessaging(app).send({ token,
         notification: { title: notification.titulo, body: notification.mensaje ?? '' },
         data: { notification_id: notification.id, usuario_id: notification.usuario_id, prioridad },
@@ -21,10 +22,10 @@ export class FcmService {
       });
       return 'sent' as const;
     } catch (error) {
-      const code = (error as { code?: string }).code;
+      const code = safeFcmCode(error);
       if (['messaging/registration-token-not-registered', 'messaging/invalid-registration-token'].includes(code ?? '')) return 'invalid' as const;
       this.logger.warn(`FCM delivery failed (${code ?? 'unknown'})`);
-      throw new Error(code ?? 'FCM_SEND_FAILED');
+      throw Object.assign(new Error(code), { code });
     }
   }
 }

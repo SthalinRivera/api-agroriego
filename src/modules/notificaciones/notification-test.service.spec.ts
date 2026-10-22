@@ -37,6 +37,11 @@ describe('notification test endpoint service', () => {
     await expect(f.service.send('u')).rejects.toThrow('no se pudo enviar');
     expect(f.prisma.notificaciones.update.mock.calls[0][0].data.data.push.status).toBe('test_failed');
   });
+  it('reports Firebase project mismatch instead of suggesting phone permissions', async () => {
+    const f = setup(); f.fcm.send.mockRejectedValue({ code: 'messaging/mismatched-credential' });
+    await expect(f.service.send('u')).rejects.toThrow('proyectos Firebase distintos');
+    expect(f.prisma.notificaciones.update.mock.calls[0][0].data.data.push.errorCodes).toEqual(['messaging/mismatched-credential']);
+  });
   it('deactivates invalid tokens and reports failure', async () => {
     const f = setup(); f.fcm.send.mockResolvedValue('invalid');
     await expect(f.service.send('u')).rejects.toThrow();

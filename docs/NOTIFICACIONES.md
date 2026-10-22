@@ -82,3 +82,19 @@ Para usar los cambios hay que desplegar nuevamente backend y frontend web; para 
 Este endpoint de prueba no sustituye la programación de alertas automáticas en un entorno serverless. El worker periódico sigue requiriendo un proceso persistente o una integración separada con un programador de tareas.
 
 Validación del botón: compilación NestJS correcta, 20 pruebas backend y 5 pruebas Flutter aprobadas; typecheck Nuxt correcto.
+
+## Permisos y diagnóstico del envío (actualización)
+
+Flutter ahora solicita permiso la primera vez incluso si Android informa `denied` antes de haber preguntado. Guarda que ya preguntó para no repetir el diálogo automáticamente cada minuto. En Notificaciones, **Activar notificaciones** vuelve a solicitar el permiso y registra el token. **Enviar notificación de prueba** realiza ese mismo paso antes del POST; si no se pudo activar este teléfono, muestra la causa y no envía la prueba. Si el sistema ya bloqueó el diálogo, habilitar manualmente en Ajustes del teléfono → Aplicaciones → AgroRiego IoT → Notificaciones. Instalar la nueva compilación para ver este comportamiento.
+
+Para Vercel, el backend admite estas alternativas de credenciales (solo en el proyecto backend, nunca en Nuxt ni Flutter):
+
+1. `FIREBASE_SERVICE_ACCOUNT_JSON`: contenido JSON de la cuenta de servicio.
+2. O las tres variables `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`. La clave debe conservar encabezado/pie PEM; se admiten saltos reales y `\n` escapados.
+3. ADC / `GOOGLE_APPLICATION_CREDENTIALS` sigue disponible cuando el archivo realmente existe en el entorno del servidor. Una ruta local de Windows no es un archivo accesible desde Vercel.
+
+En todos los casos: `FCM_ENABLED=true`, mismo proyecto Firebase para app y backend, entorno Production/Preview correcto y nuevo despliegue tras cambiar variables. Las credenciales de cuenta de servicio se obtienen de Configuración del proyecto Firebase → Cuentas de servicio, no de google-services.json.
+
+El endpoint devuelve instrucciones según el código Firebase (credenciales, proyecto diferente, token vencido, APNs, límites o indisponibilidad). Solo registra códigos permitidos en los logs y en `notificaciones.data.push.errorCodes`, sin claves, tokens ni mensajes originales de credenciales. El historial por sí solo no confirma entrega push. Para un error desconocido, revisar los logs del backend después del nuevo despliegue; no compartir claves privadas.
+
+Referencias: https://firebase.google.com/docs/cloud-messaging/flutter/receive-messages , https://firebase.google.com/docs/admin/setup , https://vercel.com/docs/environment-variables/managing-environment-variables
