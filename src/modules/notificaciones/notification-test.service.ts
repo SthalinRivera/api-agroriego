@@ -42,7 +42,7 @@ export class NotificationTestService {
     } });
     if (!sent) throw new ServiceUnavailableException({ message: 'La prueba quedó en el historial, pero no se pudo enviar el push. ' + fcmFailureHint(errorCodes[0]), code: errorCodes[0] });
     return { id: notification.id, sent, failed, message: failed
-      ? `Prueba aceptada por Firebase para ${sent} dispositivo(s); ${failed} no pudieron recibir el envío.`
+      ? `Firebase aceptó el envío a ${sent} dispositivo(s); ${failed} fallaron. ${fcmFailureHint(errorCodes[0])}`
       : 'Prueba aceptada por Firebase. Comprueba tu teléfono y el historial.' };
   }
 }

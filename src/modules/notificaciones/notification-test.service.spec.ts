@@ -37,6 +37,23 @@ describe('notification test endpoint service', () => {
     await expect(f.service.send('u')).rejects.toThrow('no se pudo enviar');
     expect(f.prisma.notificaciones.update.mock.calls[0][0].data.data.push.status).toBe('test_failed');
   });
+  it('explains partial failures without exposing device tokens', async () => {
+    const f = setup();
+    f.tx.user_devices.findMany.mockResolvedValue([
+      { id: 'd1', fcm_token: 'token-1' },
+      { id: 'd2', fcm_token: 'token-2' },
+    ]);
+    f.fcm.send.mockImplementation((_token: string) =>
+      _token === 'token-1'
+        ? Promise.resolve('sent')
+        : Promise.reject({ code: 'messaging/registration-token-not-registered' }),
+    );
+    const result = await f.service.send('u');
+    expect(result).toMatchObject({ sent: 1, failed: 1 });
+    expect(result.message).toContain('registro del teléfono venció');
+    expect(result.message).not.toContain('token-1');
+    expect(result.message).not.toContain('token-2');
+  });
   it('reports Firebase project mismatch instead of suggesting phone permissions', async () => {
     const f = setup(); f.fcm.send.mockRejectedValue({ code: 'messaging/mismatched-credential' });
     await expect(f.service.send('u')).rejects.toThrow('proyectos Firebase distintos');

@@ -46,7 +46,7 @@ Este contrato está preparado, pero el productor existente todavía no lo genera
 - PUT `/notificaciones/dispositivos/desactivar`: `{token}`; solo revoca tokens del usuario autenticado.
 - Se mantienen GET `/notificaciones`, GET `/notificaciones/no-leidas/count`, PUT `/:id/leer` y PUT `/leer-todas` bajo `/notificaciones`.
 - Flutter registra al autenticar, renueva al cambiar el token y reintenta cada minuto/al reanudar. Antes de cerrar sesión revoca el dispositivo; si falla informa mediante el error de cierre de sesión, sin dejar silenciosamente un token activo.
-- Pantalla `Notificaciones` en el menú: paginación, prioridades, filtro no leídas, lectura individual reversible y leer todas. Primer plano muestra aviso dentro de la app; segundo plano/cerrada usan el payload notification del sistema y abren el historial al pulsar.
+- Pantalla `Notificaciones` en el menú: paginación, prioridades, filtro no leídas, lectura individual reversible y leer todas. En primer plano, Flutter muestra una notificación local visible también en Android y al pulsarla abre el historial; en segundo plano/cerrada, el sistema muestra el payload notification y abre el historial al pulsarlo.
 - Nuxt conserva su módulo y añade la columna prioridad.
 
 ## Duplicados y fallos

@@ -2,10 +2,11 @@ import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateLecturaDto, BatchLecturasDto, LecturaQueryDto, LatestLecturasQueryDto, MoistureTrendQueryDto } from './lecturas.dto';
+import { DeviceLecturaDto } from './device-lectura.dto';
 
 @Injectable()
 export class LecturasService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async moistureTrend(query: MoistureTrendQueryDto, userId: string) {
     const { sensorId, days = 7 } = query;
@@ -17,9 +18,11 @@ export class LecturasService {
     if (!sensor) throw new NotFoundException('Sensor no encontrado');
     const owner = sensor.dispositivos.parcelas.propietario_id === userId;
     const member = owner || await this.prisma.parcela_usuarios.findUnique({
-      where: { parcela_id_usuario_id: {
-        parcela_id: sensor.dispositivos.parcela_id, usuario_id: userId,
-      } },
+      where: {
+        parcela_id_usuario_id: {
+          parcela_id: sensor.dispositivos.parcela_id, usuario_id: userId,
+        }
+      },
     });
     if (!member) throw new ForbiddenException('No tienes acceso a este sensor');
     if (!['humedad_suelo', 'soil_moisture'].includes(sensor.tipos_sensor.codigo.toLowerCase())) {
@@ -106,6 +109,61 @@ export class LecturasService {
 
     return this.prisma.lecturas.createMany({ data, skipDuplicates: false });
   }
+  // NUEVO MÉTODO PARA EL ESP32
+  async createFromDevice(dto: DeviceLecturaDto) {
+    // 1. Buscar el dispositivo por su device_uid
+    const dispositivo = await this.prisma.dispositivos.findUnique({
+      where: { device_uid: dto.device_uid },
+      include: { sensores: { include: { tipos_sensor: true } } } // Traemos sus sensores y tipos
+    });
+
+    if (!dispositivo) {
+      throw new NotFoundException('Dispositivo no registrado');
+    }
+
+    // 2. Actualizar la última conexión (para que no salte la alerta de Offline)
+    await this.prisma.dispositivos.update({
+      where: { id: dispositivo.id },
+      data: {
+        ultima_conexion: new Date(),
+        estado: 'online'
+      }
+    });
+
+    // 3. Preparar las lecturas
+    const lecturasAInsertar: any[] = []; // O usa Prisma.lecturasCreateManyInput[]
+
+
+    // Mapeamos los valores del ESP32 a los IDs de los sensores en la BD
+    for (const sensor of dispositivo.sensores) {
+      const tipo = sensor.tipos_sensor.codigo.toLowerCase();
+      let valor: number | null = null;
+
+      if (tipo.includes('temperatura')) valor = dto.temperatura;
+      else if (tipo.includes('humedad_ambiental') || tipo.includes('humedad_relativa')) valor = dto.humedad_ambiental;
+      else if (tipo.includes('humedad_suelo')) valor = dto.humedad_suelo;
+      else if (tipo.includes('caudal')) valor = dto.caudal;
+
+      if (valor !== null) {
+        lecturasAInsertar.push({
+          sensor_id: sensor.id,
+          valor: valor,
+          recorded_at: new Date(),
+          metadata: { source: 'ESP32_Wokwi' }
+        });
+      }
+    }
+
+    // 4. Guardar todas las lecturas en la tabla 'lecturas'
+    if (lecturasAInsertar.length > 0) {
+      await this.prisma.lecturas.createMany({
+        data: lecturasAInsertar
+      });
+    }
+
+    return { status: 'ok', message: 'Lecturas guardadas correctamente', count: lecturasAInsertar.length };
+  }
+
 
   async findAll(query: LecturaQueryDto, userId: string) {
     const { page = 1, limit = 100, sensorId, dispositivoId, tipoSensorId, desde, hasta, tipoSensorCodigo } = query;
