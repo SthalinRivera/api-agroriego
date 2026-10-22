@@ -5,6 +5,7 @@ import { LecturasService } from './lecturas.service';
 import { CreateLecturaDto, BatchLecturasDto, LecturaQueryDto, LatestLecturasQueryDto, MoistureTrendQueryDto } from './lecturas.dto';
 
 @ApiTags('Lecturas')
+
 @ApiBearerAuth()
 @Controller('lecturas')
 @UseGuards(SupabaseAuthGuard)
