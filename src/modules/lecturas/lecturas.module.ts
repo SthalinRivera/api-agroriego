@@ -6,7 +6,7 @@ import { DeviceController } from './device.controller'; // 👈 1. Importar
 
 @Module({
   imports: [PrismaModule],
-  controllers: [LecturasController, DeviceController],,
+  controllers: [LecturasController, DeviceController],
   providers: [LecturasService],
   exports: [LecturasService],
 })
