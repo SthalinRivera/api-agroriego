@@ -135,14 +135,24 @@ export class LecturasService {
 
 
     // Mapeamos los valores del ESP32 a los IDs de los sensores en la BD
+    // Mapeamos los valores del ESP32 a los IDs de los sensores en la BD
     for (const sensor of dispositivo.sensores) {
       const tipo = sensor.tipos_sensor.codigo.toLowerCase();
       let valor: number | null = null;
 
-      if (tipo.includes('temperatura')) valor = dto.temperatura;
-      else if (tipo.includes('humedad_ambiental') || tipo.includes('humedad_relativa')) valor = dto.humedad_ambiental;
-      else if (tipo.includes('humedad_suelo')) valor = dto.humedad_suelo;
-      else if (tipo.includes('caudal')) valor = dto.caudal;
+      // 👇 AQUÍ ESTÁ LA CORRECCIÓN CON TUS CÓDIGOS EN INGLÉS 👇
+      if (tipo.includes('temperature') || tipo.includes('temperatura')) {
+        valor = dto.temperatura;
+      }
+      else if (tipo.includes('humidity') || tipo.includes('humedad_ambiental') || tipo.includes('humedad_relativa')) {
+        valor = dto.humedad_ambiental;
+      }
+      else if (tipo.includes('soil_moisture') || tipo.includes('humedad_suelo')) {
+        valor = dto.humedad_suelo;
+      }
+      else if (tipo.includes('flow') || tipo.includes('caudal')) {
+        valor = dto.caudal;
+      }
 
       if (valor !== null) {
         lecturasAInsertar.push({
