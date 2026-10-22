@@ -1,3 +1,4 @@
+import { NotificationTestService } from './notification-test.service';
 import { FcmService } from './fcm.service';
 import { NotificationWorker } from './notification-worker.service';
 import { NotificationDevicesController } from './notification-devices.controller';
@@ -9,7 +10,7 @@ import { PrismaModule } from '../../config/prisma/prisma.module';
 @Module({
   imports: [PrismaModule],
   controllers: [NotificacionesController, NotificationDevicesController],
-  providers: [NotificacionesService, FcmService, NotificationWorker],
+  providers: [NotificationTestService, NotificacionesService, FcmService, NotificationWorker],
   exports: [NotificacionesService],
 })
 export class NotificacionesModule {}

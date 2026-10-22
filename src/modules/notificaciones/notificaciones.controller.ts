@@ -1,4 +1,5 @@
-import { Controller, Get, Put, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
+import { NotificationTestService } from './notification-test.service';
+import { Controller, Get, Put, Post, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { NotificacionesService } from './notificaciones.service';
@@ -9,7 +10,13 @@ import { NotificacionQueryDto, MarcarLeidaDto } from './notificaciones.dto';
 @Controller('notificaciones')
 @UseGuards(SupabaseAuthGuard)
 export class NotificacionesController {
-  constructor(private readonly notificacionesService: NotificacionesService) {}
+  constructor(private readonly notificacionesService: NotificacionesService, private readonly notificationTest: NotificationTestService) {}
+
+  @Post('prueba')
+  @ApiOperation({ summary: 'Enviar una notificación de prueba a mis dispositivos' })
+  async sendTest(@Req() req: any) {
+    return this.notificationTest.send(req.user.id);
+  }
 
   @Get()
   @ApiOperation({ summary: 'Listar notificaciones del usuario' })

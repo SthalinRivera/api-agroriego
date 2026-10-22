@@ -70,3 +70,15 @@ Referencias oficiales: https://firebase.google.com/docs/cloud-messaging/flutter/
 - Nuxt `npm run typecheck`: correcto.
 - Consultas Prisma de sensores/predicciones/cola y bloqueo PostgreSQL verificadas contra la base real, sin escrituras ni envíos.
 - No se construyó ni probó un APK/IPA con Firebase configurado; la prueba real de entrega sigue pendiente.
+
+## Botón de prueba sin ESP32
+
+Disponible en Flutter (Menú → Notificaciones) y Nuxt (módulo Notificaciones): **Enviar notificación de prueba**.
+
+El botón llama a `POST /notificaciones/prueba` con la sesión existente. El servidor registra un aviso `prueba_push` del usuario autenticado y espera el envío FCM dentro de la petición HTTP; esta prueba no depende del temporizador del worker y puede ejecutarse en Vercel. Solo se permiten pruebas cada 30 segundos por usuario. No crea alertas ni lecturas de sensores. Si no existen dispositivos activos, informa cómo registrar la app; si Firebase falla, no muestra un éxito falso. Los tokens inválidos se desactivan.
+
+Para usar los cambios hay que desplegar nuevamente backend y frontend web; para el botón móvil, instalar la nueva compilación Flutter. Abrir primero la app e iniciar sesión para registrar el token. Para comprobar segundo plano, dejar el teléfono en segundo plano y pulsar el botón web con la misma cuenta. Un mensaje de aceptación de Firebase confirma aceptación del envío, no recepción garantizada por el teléfono.
+
+Este endpoint de prueba no sustituye la programación de alertas automáticas en un entorno serverless. El worker periódico sigue requiriendo un proceso persistente o una integración separada con un programador de tareas.
+
+Validación del botón: compilación NestJS correcta, 20 pruebas backend y 5 pruebas Flutter aprobadas; typecheck Nuxt correcto.
