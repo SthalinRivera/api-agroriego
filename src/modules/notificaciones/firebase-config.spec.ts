@@ -11,6 +11,10 @@ describe('Firebase server configuration', () => {
     firebaseCredential({ FIREBASE_SERVICE_ACCOUNT_JSON: '{"project_id":"p","client_email":"a","private_key":"k"}' });
     expect(cert).toHaveBeenCalledWith({ project_id: 'p', client_email: 'a', private_key: 'k' });
   });
+  it('supports the FIREBASE_SERVICE_ACCOUNT environment variable', () => {
+    firebaseCredential({ FIREBASE_SERVICE_ACCOUNT: '{"project_id":"p","client_email":"a","private_key":"k"}' });
+    expect(cert).toHaveBeenCalledWith({ project_id: 'p', client_email: 'a', private_key: 'k' });
+  });
   it('keeps ADC support', () => { firebaseCredential({}); expect(applicationDefault).toHaveBeenCalled(); });
   it('rejects incomplete or malformed credentials without exposing their contents', () => {
     expect(() => firebaseCredential({ FIREBASE_PRIVATE_KEY: 'secret' })).toThrow('Incomplete Firebase service account');

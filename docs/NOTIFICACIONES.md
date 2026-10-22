@@ -89,7 +89,7 @@ Flutter ahora solicita permiso la primera vez incluso si Android informa `denied
 
 Para Vercel, el backend admite estas alternativas de credenciales (solo en el proyecto backend, nunca en Nuxt ni Flutter):
 
-1. `FIREBASE_SERVICE_ACCOUNT_JSON`: contenido JSON de la cuenta de servicio.
+1. `FIREBASE_SERVICE_ACCOUNT_JSON` o `FIREBASE_SERVICE_ACCOUNT`: contenido JSON de la cuenta de servicio. La segunda variable se admite para instalaciones existentes.
 2. O las tres variables `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`. La clave debe conservar encabezado/pie PEM; se admiten saltos reales y `\n` escapados.
 3. ADC / `GOOGLE_APPLICATION_CREDENTIALS` sigue disponible cuando el archivo realmente existe en el entorno del servidor. Una ruta local de Windows no es un archivo accesible desde Vercel.
 

@@ -1,7 +1,7 @@
 import { applicationDefault, cert } from 'firebase-admin/app';
 
 export function firebaseCredential(env: NodeJS.ProcessEnv = process.env) {
-  const json = env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  const json = env.FIREBASE_SERVICE_ACCOUNT_JSON ?? env.FIREBASE_SERVICE_ACCOUNT;
   if (json) {
     try { return cert(JSON.parse(json)); }
     catch { throw Object.assign(new Error('Invalid Firebase service account'), { code: 'app/invalid-credential' }); }
