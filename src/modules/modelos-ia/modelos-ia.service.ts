@@ -18,9 +18,11 @@ export class ModelosIAService {
       await this.prisma.modelos_ia.updateMany({ where: { activo: true }, data: { activo: false } });
     }
 
+    const { archivoUrl, ...fields } = dto;
     return this.prisma.modelos_ia.create({
       data: {
-        ...dto,
+        ...fields,
+        archivo_url: archivoUrl,
         configuracion: dto.configuracion || {},
         features: dto.features || [],
         fecha_entrenamiento: new Date(),
@@ -59,9 +61,10 @@ export class ModelosIAService {
       await this.prisma.modelos_ia.updateMany({ where: { activo: true, id: { not: id } }, data: { activo: false } });
     }
 
+    const { archivoUrl, ...fields } = dto;
     return this.prisma.modelos_ia.update({
       where: { id },
-      data: dto,
+      data: { ...fields, archivo_url: archivoUrl },
     });
   }
 

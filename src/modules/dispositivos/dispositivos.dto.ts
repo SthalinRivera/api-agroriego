@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsInt, IsString, IsOptional, IsBoolean, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateDispositivoDto {
@@ -87,7 +87,7 @@ export class UpdateDispositivoDto {
   @ApiPropertyOptional({ example: 85.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal({}, { message: 'bateria_porcentaje debe ser decimal' })
+  @IsNumber()
   @Min(0)
   @Max(100)
   bateriaPorcentaje?: number;
@@ -118,14 +118,14 @@ export class DispositivoQueryDto {
   @ApiPropertyOptional({ example: 1, description: 'Página (default: 1)' })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20, description: 'Items por página (default: 20, max: 100)' })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;
@@ -138,6 +138,7 @@ export class DispositivoQueryDto {
 
   @ApiPropertyOptional({ example: true, description: 'Filtrar solo activos' })
   @IsOptional()
+  @Transform(({ value }) => value === 'true' ? true : value === 'false' ? false : value)
   @IsBoolean()
   activo?: boolean;
 }
@@ -150,7 +151,7 @@ export class DeviceHeartbeatDto {
   @ApiPropertyOptional({ example: 85.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @Max(100)
   bateriaPorcentaje?: number;

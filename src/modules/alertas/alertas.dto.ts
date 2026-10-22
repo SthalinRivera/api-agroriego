@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn, IsEnum, IsDateString } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn, IsEnum, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -53,13 +53,13 @@ export class CreateAlertaDto {
   @ApiPropertyOptional({ example: 18.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valorDetectado?: number;
 
   @ApiPropertyOptional({ example: 25.0 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valorLimite?: number;
 }
 
@@ -86,14 +86,14 @@ export class AlertaQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;

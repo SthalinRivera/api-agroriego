@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUUID, Min, Max, Length, IsIn, IsDateString, IsBoolean } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsNumber, IsUUID, Min, Max, Length, IsIn, IsDateString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -41,14 +41,14 @@ export class ReporteQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;
@@ -80,6 +80,12 @@ export class GenerarReporteIADto {
   reporteId!: string;
 
   @ApiPropertyOptional({ example: 'Resumen ejecutivo del periodo...' })
+  @IsOptional()
+  @IsString()
+  prompt?: string;
+}
+export class GenerarReporteIABodyDto {
+  @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   prompt?: string;

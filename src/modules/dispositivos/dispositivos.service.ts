@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateDispositivoDto, UpdateDispositivoDto, DispositivoQueryDto, DeviceHeartbeatDto } from './dispositivos.dto';
@@ -35,19 +36,8 @@ export class DispositivosService {
   async findAll(query: DispositivoQueryDto, userId: string) {
     const { page = 1, limit = 20, estado, activo } = query;
     const skip = (page - 1) * limit;
-
-    // Obtener parcelas del usuario
-    const userParcelas = await this.prisma.parcela_usuarios.findMany({
-      where: { usuario_id: userId },
-      select: { parcela_id: true },
-    });
-    const parcelaIds = userParcelas.map(p => p.parcela_id);
-
-    const where: any = {
-      parcela_id: { in: parcelaIds },
-    };
-    if (estado) where.estado = estado;
-    if (activo !== undefined) where.activo = activo;
+    const where: any = { parcelas: parcelaAccess(userId) };
+    if (estado) where.estado = estado; if (activo !== undefined) where.activo = activo;
 
     const [data, total] = await Promise.all([
       this.prisma.dispositivos.findMany({
@@ -120,7 +110,7 @@ export class DispositivosService {
     return this.prisma.dispositivos.delete({ where: { id } });
   }
 
-  async heartbeat(dto: DeviceHeartbeatDto) {
+  async heartbeat(dto: DeviceHeartbeatDto, userId: string) {
     const dispositivo = await this.prisma.dispositivos.findUnique({
       where: { device_uid: dto.deviceUid },
     });
@@ -129,6 +119,7 @@ export class DispositivosService {
       throw new NotFoundException('Dispositivo no registrado');
     }
 
+    await this.findOne(dispositivo.id, userId);
     const metadata = {
       ...(typeof dispositivo.metadata === 'object' && dispositivo.metadata !== null && !Array.isArray(dispositivo.metadata)
         ? dispositivo.metadata

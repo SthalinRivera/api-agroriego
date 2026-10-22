@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateAlertaDto, UpdateAlertaDto, AtenderAlertaDto, AlertaQueryDto, AlertaEstado, AlertaPrioridad } from './alertas.dto';
@@ -57,32 +58,9 @@ export class AlertasService {
   async findAll(query: AlertaQueryDto, userId: string) {
     const { page = 1, limit = 20, parcelaId, estado, prioridad, tipo, desde, hasta } = query;
     const skip = (page - 1) * limit;
-
-    // Obtener parcelas del usuario
-    const userParcelas = await this.prisma.parcela_usuarios.findMany({
-      where: { usuario_id: userId },
-      select: { parcela_id: true },
-    });
-    const userParcelaIds = userParcelas.map(p => p.parcela_id);
-
-    // También incluir parcelas propias
-    const ownParcelas = await this.prisma.parcelas.findMany({
-      where: { propietario_id: userId },
-      select: { id: true },
-    });
-    const allParcelaIds = [...new Set([...userParcelaIds, ...ownParcelas.map(p => p.id)])];
-
-    const where: any = {
-      parcela_id: parcelaId ? parcelaId : { in: allParcelaIds },
-    };
-    if (estado) where.estado = estado;
-    if (prioridad) where.prioridad = prioridad;
-    if (tipo) where.tipo = tipo;
-    if (desde || hasta) {
-      where.created_at = {};
-      if (desde) where.created_at.gte = new Date(desde);
-      if (hasta) where.created_at.lte = new Date(hasta);
-    }
+    const where: any = { parcelas: parcelaAccess(userId), ...(parcelaId ? { parcela_id: parcelaId } : {}) };
+    if (estado) where.estado = estado; if (prioridad) where.prioridad = prioridad; if (tipo) where.tipo = tipo;
+    if (desde || hasta) where.created_at = { ...(desde ? { gte: new Date(desde) } : {}), ...(hasta ? { lte: new Date(hasta) } : {}) };
 
     const [data, total] = await Promise.all([
       this.prisma.alertas.findMany({

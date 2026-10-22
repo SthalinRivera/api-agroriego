@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateCultivoDto, UpdateCultivoDto, CultivoQueryDto } from './cultivos.dto';
@@ -16,11 +17,13 @@ export class CultivosService {
       });
     if (!hasAccess) throw new ForbiddenException('No tienes acceso a esta parcela');
 
+    const { parcelaId, fechaSiembra, cantidadPlantas, edadPromedioAnios, sistemaRiego, marcoPlantacion, ...fields } = dto;
     return this.prisma.cultivos.create({
       data: {
-        ...dto,
+        ...fields,
+        cantidad_plantas: cantidadPlantas, edad_promedio_anios: edadPromedioAnios, sistema_riego: sistemaRiego, marco_plantacion: marcoPlantacion,
         parcela_id: dto.parcelaId,
-        fecha_siembra: dto.fechaSiembra ? new Date(dto.fechaSiembra) : null,
+        fecha_siembra: fechaSiembra ? new Date(fechaSiembra) : null,
         activo: true,
       },
       include: { parcelas: { select: { id: true, nombre: true } } },
@@ -30,20 +33,7 @@ export class CultivosService {
   async findAll(query: CultivoQueryDto, userId: string) {
     const { page = 1, limit = 20, parcelaId, activo } = query;
     const skip = (page - 1) * limit;
-
-    const userParcelas = await this.prisma.parcela_usuarios.findMany({
-      where: { usuario_id: userId },
-      select: { parcela_id: true },
-    });
-    const userParcelaIds = userParcelas.map(p => p.parcela_id);
-
-    const ownParcelas = await this.prisma.parcelas.findMany({
-      where: { propietario_id: userId },
-      select: { id: true },
-    });
-    const allParcelaIds = [...new Set([...userParcelaIds, ...ownParcelas.map(p => p.id)])];
-
-    const where: any = { parcela_id: parcelaId ? parcelaId : { in: allParcelaIds } };
+    const where: any = { parcelas: parcelaAccess(userId), ...(parcelaId ? { parcela_id: parcelaId } : {}) };
     if (activo !== undefined) where.activo = activo;
 
     const [data, total] = await Promise.all([
@@ -96,9 +86,10 @@ export class CultivosService {
 
   async update(id: string, dto: UpdateCultivoDto, userId: string) {
     await this.findOne(id, userId);
+    const { fechaSiembra, cantidadPlantas, edadPromedioAnios, sistemaRiego, marcoPlantacion, ...fields } = dto;
     return this.prisma.cultivos.update({
       where: { id },
-      data: { ...dto, fecha_siembra: dto.fechaSiembra ? new Date(dto.fechaSiembra) : undefined },
+      data: { ...fields, cantidad_plantas: cantidadPlantas, edad_promedio_anios: edadPromedioAnios, sistema_riego: sistemaRiego, marco_plantacion: marcoPlantacion, fecha_siembra: fechaSiembra ? new Date(fechaSiembra) : undefined },
     });
   }
 

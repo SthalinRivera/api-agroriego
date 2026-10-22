@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateSensorDto, UpdateSensorDto, CreateTipoSensorDto, SensorQueryDto } from './sensores.dto';
@@ -64,26 +65,8 @@ export class SensoresService {
   async findAll(query: SensorQueryDto, userId: string) {
     const { page = 1, limit = 20, dispositivoId, tipoSensorId, activo } = query;
     const skip = (page - 1) * limit;
-
-    // Obtener parcelas del usuario
-    const userParcelas = await this.prisma.parcela_usuarios.findMany({
-      where: { usuario_id: userId },
-      select: { parcela_id: true },
-    });
-    const parcelaIds = userParcelas.map(p => p.parcela_id);
-
-    // Obtener dispositivos del usuario
-    const userDispositivos = await this.prisma.dispositivos.findMany({
-      where: { parcela_id: { in: parcelaIds } },
-      select: { id: true },
-    });
-    const dispositivoIds = userDispositivos.map(d => d.id);
-
-    const where: any = {
-      dispositivo_id: dispositivoId ? dispositivoId : { in: dispositivoIds },
-    };
-    if (tipoSensorId) where.tipo_sensor_id = BigInt(tipoSensorId);
-    if (activo !== undefined) where.activo = activo;
+    const where: any = { dispositivos: { parcelas: parcelaAccess(userId) } };
+    if (dispositivoId) where.dispositivo_id = dispositivoId; if (tipoSensorId) where.tipo_sensor_id = BigInt(tipoSensorId); if (activo !== undefined) where.activo = activo;
 
     const [data, total] = await Promise.all([
       this.prisma.sensores.findMany({

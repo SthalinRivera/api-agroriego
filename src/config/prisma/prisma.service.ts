@@ -11,6 +11,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
         const adapter = new PrismaPg(pool);
         super({
             adapter,
+            omit: { dispositivos: { secret_hash: true } },
             log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
         });
     }

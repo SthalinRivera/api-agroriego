@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateLecturaDto, BatchLecturasDto, LecturaQueryDto, LatestLecturasQueryDto, MoistureTrendQueryDto } from './lecturas.dto';
@@ -109,41 +110,9 @@ export class LecturasService {
   async findAll(query: LecturaQueryDto, userId: string) {
     const { page = 1, limit = 100, sensorId, dispositivoId, tipoSensorId, desde, hasta, tipoSensorCodigo } = query;
     const skip = (page - 1) * limit;
-
-    // Construir where
-    const where: any = {};
-
-    if (sensorId) {
-      where.sensor_id = sensorId;
-    } else if (dispositivoId) {
-      where.sensores = { dispositivo_id: dispositivoId };
-    } else if (tipoSensorId) {
-      where.sensores = { tipo_sensor_id: BigInt(tipoSensorId) };
-    } else if (tipoSensorCodigo) {
-      where.sensores = { tipos_sensor: { codigo: tipoSensorCodigo } };
-    } else {
-      // Obtener parcelas del usuario
-      const userParcelas = await this.prisma.parcela_usuarios.findMany({
-        where: { usuario_id: userId },
-        select: { parcela_id: true },
-      });
-      const parcelaIds = userParcelas.map(p => p.parcela_id);
-
-      // Obtener dispositivos
-      const userDispositivos = await this.prisma.dispositivos.findMany({
-        where: { parcela_id: { in: parcelaIds } },
-        select: { id: true },
-      });
-      const dispositivoIds = userDispositivos.map(d => d.id);
-
-      where.sensores = { dispositivo_id: { in: dispositivoIds } };
-    }
-
-    if (desde || hasta) {
-      where.recorded_at = {};
-      if (desde) where.recorded_at.gte = new Date(desde);
-      if (hasta) where.recorded_at.lte = new Date(hasta);
-    }
+    const where: any = { sensores: { dispositivos: { parcelas: parcelaAccess(userId) } } };
+    if (sensorId) where.sensor_id = sensorId; if (dispositivoId) where.sensores.dispositivo_id = dispositivoId; if (tipoSensorId) where.sensores.tipo_sensor_id = BigInt(tipoSensorId); if (tipoSensorCodigo) where.sensores.tipos_sensor = { codigo: tipoSensorCodigo };
+    if (desde || hasta) where.recorded_at = { ...(desde ? { gte: new Date(desde) } : {}), ...(hasta ? { lte: new Date(hasta) } : {}) };
 
     const [data, total] = await Promise.all([
       this.prisma.lecturas.findMany({
@@ -202,29 +171,9 @@ export class LecturasService {
       });
     }
 
-    // Obtener todas las lecturas del usuario
-    const userParcelas = await this.prisma.parcela_usuarios.findMany({
-      where: { usuario_id: userId },
-      select: { parcela_id: true },
-    });
-    const parcelaIds = userParcelas.map(p => p.parcela_id);
-
-    const dispositivos = await this.prisma.dispositivos.findMany({
-      where: { parcela_id: { in: parcelaIds } },
-      select: { id: true },
-    });
-    const dispositivoIds = dispositivos.map(d => d.id);
-
-    const sensores = await this.prisma.sensores.findMany({
-      where: { dispositivo_id: { in: dispositivoIds }, activo: true },
-      select: { id: true },
-    });
-    const sensorIds = sensores.map(s => s.id);
-
     return this.prisma.lecturas.findMany({
-      where: { sensor_id: { in: sensorIds } },
-      take: limit,
-      orderBy: { recorded_at: 'desc' },
+      where: { sensores: { activo: true, dispositivos: { parcelas: parcelaAccess(userId) } } },
+      take: limit, orderBy: { recorded_at: 'desc' },
       include: { sensores: { include: { tipos_sensor: true } } },
     });
   }
@@ -249,19 +198,10 @@ export class LecturasService {
       if (hasta) where.recorded_at.lte = new Date(hasta);
     }
 
-    const lecturas = await this.prisma.lecturas.findMany({ where, orderBy: { recorded_at: 'asc' } });
-
-    if (lecturas.length === 0) {
-      return { count: 0, min: null, max: null, avg: null, latest: null };
-    }
-
-    const valores = lecturas.map(l => Number(l.valor));
-    return {
-      count: lecturas.length,
-      min: Math.min(...valores),
-      max: Math.max(...valores),
-      avg: valores.reduce((a, b) => a + b, 0) / valores.length,
-      latest: lecturas[lecturas.length - 1],
-    };
+    const [aggregate, latest] = await Promise.all([
+      this.prisma.lecturas.aggregate({ where, _count: true, _min: { valor: true }, _max: { valor: true }, _avg: { valor: true } }),
+      this.prisma.lecturas.findFirst({ where, orderBy: { recorded_at: 'desc' } }),
+    ]);
+    return { count: aggregate._count, min: aggregate._min.valor, max: aggregate._max.valor, avg: aggregate._avg.valor, latest };
   }
 }

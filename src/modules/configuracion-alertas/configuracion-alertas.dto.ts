@@ -10,7 +10,7 @@ export class UpsertConfiguracionAlertaDto {
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @Max(100)
   humedadMinima?: number;
@@ -18,7 +18,7 @@ export class UpsertConfiguracionAlertaDto {
   @ApiPropertyOptional({ example: 40 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @Max(100)
   humedadMaxima?: number;
@@ -26,7 +26,7 @@ export class UpsertConfiguracionAlertaDto {
   @ApiPropertyOptional({ example: 10 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(-20)
   @Max(50)
   temperaturaMinima?: number;
@@ -34,7 +34,7 @@ export class UpsertConfiguracionAlertaDto {
   @ApiPropertyOptional({ example: 35 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(-20)
   @Max(50)
   temperaturaMaxima?: number;
@@ -42,7 +42,7 @@ export class UpsertConfiguracionAlertaDto {
   @ApiPropertyOptional({ example: 40 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @Max(100)
   humedadRelativaMinima?: number;
@@ -50,7 +50,7 @@ export class UpsertConfiguracionAlertaDto {
   @ApiPropertyOptional({ example: 80 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @Max(100)
   humedadRelativaMaxima?: number;
@@ -58,21 +58,21 @@ export class UpsertConfiguracionAlertaDto {
   @ApiPropertyOptional({ example: 5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   caudalMinimoLmin?: number;
 
   @ApiPropertyOptional({ example: 50 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   caudalMaximoLmin?: number;
 
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @Max(100)
   bateriaMinima?: number = 20;

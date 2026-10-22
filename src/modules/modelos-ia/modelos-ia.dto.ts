@@ -72,25 +72,25 @@ export class UpdateModeloIADto {
   @ApiPropertyOptional({ example: 0.15 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   mae?: number;
 
   @ApiPropertyOptional({ example: 0.22 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   rmse?: number;
 
   @ApiPropertyOptional({ example: 5.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   mape?: number;
 
   @ApiPropertyOptional({ example: 0.92 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   r2?: number;
 
   @ApiPropertyOptional({ example: 'https://storage/modelo_rf_v22.pkl' })

@@ -2,7 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Req 
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { SensoresService } from './sensores.service';
-import { CreateSensorDto, UpdateSensorDto, CreateTipoSensorDto, SensorQueryDto } from './sensores.dto';
+import { CalibrarSensorDto, CreateSensorDto, UpdateSensorDto, CreateTipoSensorDto, SensorQueryDto } from './sensores.dto';
 
 @ApiTags('Sensores')
 @ApiBearerAuth()
@@ -63,8 +63,8 @@ export class SensoresController {
 
   @Post(':id/calibrar')
   @ApiOperation({ summary: 'Calibrar un sensor' })
-  async calibrar(@Param('id') id: string, @Body('offset') offset: number, @Req() req: any) {
-    return this.sensoresService.calibrar(id, offset, req.user.id);
+  async calibrar(@Param('id') id: string, @Body() dto: CalibrarSensorDto, @Req() req: any) {
+    return this.sensoresService.calibrar(id, dto.offset, req.user.id);
   }
 
   @Delete(':id')

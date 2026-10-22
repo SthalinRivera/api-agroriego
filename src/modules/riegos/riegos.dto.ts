@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn, IsDateString, IsBoolean, IsEnum } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn, IsDateString, IsBoolean, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -28,7 +28,7 @@ export class CreateRiegoDto {
   @ApiPropertyOptional({ example: 30.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   humedadInicial?: number;
 
   @ApiPropertyOptional({ example: 'Observaciones del riego' })
@@ -53,19 +53,19 @@ export class UpdateRiegoDto {
   @ApiPropertyOptional({ example: 25.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   caudalPromedioLmin?: number;
 
   @ApiPropertyOptional({ example: 5000 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   volumenLitros?: number;
 
   @ApiPropertyOptional({ example: 45.0 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   humedadFinal?: number;
 
   @ApiPropertyOptional({ example: 'Riego completado sin problemas' })
@@ -78,19 +78,19 @@ export class FinalizarRiegoDto {
   @ApiPropertyOptional({ example: 45.0 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   humedadFinal?: number;
 
   @ApiPropertyOptional({ example: 5000 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   volumenLitros?: number;
 
   @ApiPropertyOptional({ example: 25.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   caudalPromedioLmin?: number;
 
   @ApiPropertyOptional({ example: 120 })
@@ -110,14 +110,14 @@ export class RiegoQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;

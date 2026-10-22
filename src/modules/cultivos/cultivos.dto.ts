@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn, IsBoolean, IsDateString } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsInt, IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn, IsBoolean, IsDateString } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCultivoDto {
@@ -29,7 +29,7 @@ export class CreateCultivoDto {
   @ApiPropertyOptional({ example: 3.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   edadPromedioAnios?: number;
 
   @ApiPropertyOptional({ example: '2020-03-15' })
@@ -78,7 +78,7 @@ export class UpdateCultivoDto {
   @ApiPropertyOptional({ example: 3.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   edadPromedioAnios?: number;
 
   @ApiPropertyOptional({ example: '2020-03-15' })
@@ -113,14 +113,14 @@ export class CultivoQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;
@@ -132,6 +132,7 @@ export class CultivoQueryDto {
 
   @ApiPropertyOptional({ example: true })
   @IsOptional()
+  @Transform(({ value }) => value === 'true' ? true : value === 'false' ? false : value)
   @IsBoolean()
   activo?: boolean;
 }

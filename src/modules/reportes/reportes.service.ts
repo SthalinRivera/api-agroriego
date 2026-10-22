@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateReporteDto, ReporteQueryDto, GenerarReporteIADto } from './reportes.dto';
@@ -35,26 +36,9 @@ export class ReportesService {
   async findAll(query: ReporteQueryDto, userId: string) {
     const { page = 1, limit = 20, parcelaId, tipo, desde, hasta } = query;
     const skip = (page - 1) * limit;
-
-    const userParcelas = await this.prisma.parcela_usuarios.findMany({
-      where: { usuario_id: userId },
-      select: { parcela_id: true },
-    });
-    const userParcelaIds = userParcelas.map(p => p.parcela_id);
-
-    const ownParcelas = await this.prisma.parcelas.findMany({
-      where: { propietario_id: userId },
-      select: { id: true },
-    });
-    const allParcelaIds = [...new Set([...userParcelaIds, ...ownParcelas.map(p => p.id)])];
-
-    const where: any = { parcela_id: parcelaId ? parcelaId : { in: allParcelaIds } };
+    const where: any = { parcelas: parcelaAccess(userId), ...(parcelaId ? { parcela_id: parcelaId } : {}) };
     if (tipo) where.tipo = tipo;
-    if (desde || hasta) {
-      where.created_at = {};
-      if (desde) where.created_at.gte = new Date(desde);
-      if (hasta) where.created_at.lte = new Date(hasta);
-    }
+    if (desde || hasta) where.created_at = { ...(desde ? { gte: new Date(desde) } : {}), ...(hasta ? { lte: new Date(hasta) } : {}) };
 
     const [data, total] = await Promise.all([
       this.prisma.reportes.findMany({

@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsInt, IsString, IsOptional, IsBoolean, IsNumber, IsUUID, IsDecimal, Min, Max, Length, IsIn } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateSensorDto {
@@ -52,19 +52,19 @@ export class CreateSensorDto {
   @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valorMinimo?: number;
 
   @ApiPropertyOptional({ example: 100 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valorMaximo?: number;
 
   @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   offsetCalibracion?: number = 0;
 
   @ApiPropertyOptional({ example: '2024-01-15' })
@@ -111,19 +111,19 @@ export class UpdateSensorDto {
   @ApiPropertyOptional({ example: 0 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valorMinimo?: number;
 
   @ApiPropertyOptional({ example: 100 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valorMaximo?: number;
 
   @ApiPropertyOptional({ example: 0.5 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   offsetCalibracion?: number;
 
   @ApiPropertyOptional({ example: '2024-01-15' })
@@ -168,14 +168,14 @@ export class SensorQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;
@@ -193,6 +193,13 @@ export class SensorQueryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @Transform(({ value }) => value === 'true' ? true : value === 'false' ? false : value)
   @IsBoolean()
   activo?: boolean;
+}
+export class CalibrarSensorDto {
+  @ApiProperty({ example: 0.5 })
+  @Type(() => Number)
+  @IsNumber()
+  offset!: number;
 }

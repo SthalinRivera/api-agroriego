@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, IsArray, ValidateNested, IsDateString, IsIn } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, IsArray, ValidateNested, IsDateString, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -14,23 +14,23 @@ export class PredictInputDto {
 
   @ApiProperty({ example: 25.5 })
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   humedadSuelo!: number;
 
   @ApiProperty({ example: 28.3 })
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   temperatura!: number;
 
   @ApiProperty({ example: 65.0 })
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   humedadRelativa!: number;
 
   @ApiPropertyOptional({ example: 15.2 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   caudalLmin?: number;
 
   @ApiPropertyOptional({ example: 2 })
@@ -60,23 +60,23 @@ export class CreatePrediccionDto {
 
   @ApiProperty({ example: 25.5 })
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   humedadSuelo!: number;
 
   @ApiProperty({ example: 28.3 })
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   temperatura!: number;
 
   @ApiProperty({ example: 65.0 })
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   humedadRelativa!: number;
 
   @ApiPropertyOptional({ example: 15.2 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   caudalLmin?: number;
 
   @ApiPropertyOptional({ example: 2 })
@@ -98,14 +98,14 @@ export class PrediccionQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 20 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(100)
   limit?: number = 20;

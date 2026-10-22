@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateRiegoDto, UpdateRiegoDto, FinalizarRiegoDto, RiegoQueryDto, RiegoEstado, RiegoOrigen } from './riegos.dto';
@@ -39,27 +40,9 @@ export class RiegosService {
   async findAll(query: RiegoQueryDto, userId: string) {
     const { page = 1, limit = 20, parcelaId, estado, origen, desde, hasta } = query;
     const skip = (page - 1) * limit;
-
-    const userParcelas = await this.prisma.parcela_usuarios.findMany({
-      where: { usuario_id: userId },
-      select: { parcela_id: true },
-    });
-    const userParcelaIds = userParcelas.map(p => p.parcela_id);
-
-    const ownParcelas = await this.prisma.parcelas.findMany({
-      where: { propietario_id: userId },
-      select: { id: true },
-    });
-    const allParcelaIds = [...new Set([...userParcelaIds, ...ownParcelas.map(p => p.id)])];
-
-    const where: any = { parcela_id: parcelaId ? parcelaId : { in: allParcelaIds } };
-    if (estado) where.estado = estado;
-    if (origen) where.origen = origen;
-    if (desde || hasta) {
-      where.inicio = {};
-      if (desde) where.inicio.gte = new Date(desde);
-      if (hasta) where.inicio.lte = new Date(hasta);
-    }
+    const where: any = { parcelas: parcelaAccess(userId), ...(parcelaId ? { parcela_id: parcelaId } : {}) };
+    if (estado) where.estado = estado; if (origen) where.origen = origen;
+    if (desde || hasta) where.inicio = { ...(desde ? { gte: new Date(desde) } : {}), ...(hasta ? { lte: new Date(hasta) } : {}) };
 
     const [data, total] = await Promise.all([
       this.prisma.riegos.findMany({
@@ -118,7 +101,11 @@ export class RiegosService {
 
   async update(id: string, dto: UpdateRiegoDto, userId: string) {
     await this.findOne(id, userId);
-    return this.prisma.riegos.update({ where: { id }, data: dto });
+    const { duracionMinutos, caudalPromedioLmin, volumenLitros, humedadFinal, ...fields } = dto;
+    return this.prisma.riegos.update({ where: { id }, data: {
+      ...fields, duracion_minutos: duracionMinutos, caudal_promedio_lmin: caudalPromedioLmin,
+      volumen_litros: volumenLitros, humedad_final: humedadFinal,
+    } });
   }
 
   async finalizar(id: string, dto: FinalizarRiegoDto, userId: string) {
@@ -129,7 +116,7 @@ export class RiegosService {
     }
 
     const fin = new Date();
-    const duracionMinutos = dto.duracionMinutos || Math.round((fin.getTime() - riego.inicio.getTime()) / 60000);
+    const duracionMinutos = dto.duracionMinutos ?? Math.round((fin.getTime() - riego.inicio.getTime()) / 60000);
 
     return this.prisma.riegos.update({
       where: { id },

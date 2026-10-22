@@ -2,7 +2,7 @@ import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Req } fro
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { ReportesService } from './reportes.service';
-import { CreateReporteDto, ReporteQueryDto, GenerarReporteIADto } from './reportes.dto';
+import { CreateReporteDto, ReporteQueryDto, GenerarReporteIABodyDto } from './reportes.dto';
 
 @ApiTags('Reportes')
 @ApiBearerAuth()
@@ -31,7 +31,7 @@ export class ReportesController {
 
   @Post(':id/ia')
   @ApiOperation({ summary: 'Generar análisis IA para un reporte' })
-  async generarIA(@Param('id') id: string, @Body() dto: GenerarReporteIADto, @Req() req: any) {
+  async generarIA(@Param('id') id: string, @Body() dto: GenerarReporteIABodyDto, @Req() req: any) {
     return this.reportesService.generarConIA({ ...dto, reporteId: id }, req.user.id);
   }
 

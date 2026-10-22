@@ -1,3 +1,4 @@
+import { parcelaAccess } from '../../common/shared/parcela-access';
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../config/prisma/prisma.service';
 import { CreateParcelaDto, UpdateParcelaDto, ParcelaQueryDto } from './parcelas.dto';
@@ -7,9 +8,12 @@ export class ParcelasService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateParcelaDto, userId: string) {
+    const { altitudMsnm, areaHectareas, ...fields } = dto;
     return this.prisma.parcelas.create({
       data: {
-        ...dto,
+        ...fields,
+        altitud_msnm: altitudMsnm,
+        area_hectareas: areaHectareas,
         propietario_id: userId,
       },
     });
@@ -19,9 +23,7 @@ export class ParcelasService {
     const { page = 1, limit = 20, activa, departamento, search } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      propietario_id: userId,
-    };
+    const where: any = { AND: [parcelaAccess(userId)] };
 
     if (activa !== undefined) {
       where.activa = activa;
@@ -96,14 +98,16 @@ export class ParcelasService {
   async update(id: string, dto: UpdateParcelaDto, userId: string) {
     await this.findOne(id, userId); // Verifica acceso
 
+    const { altitudMsnm, areaHectareas, ...fields } = dto;
     return this.prisma.parcelas.update({
       where: { id },
-      data: dto,
+      data: { ...fields, altitud_msnm: altitudMsnm, area_hectareas: areaHectareas },
     });
   }
 
   async delete(id: string, userId: string) {
-    await this.findOne(id, userId); // Verifica acceso (solo dueño puede borrar)
+    const parcela = await this.findOne(id, userId);
+    if (parcela.propietario_id !== userId) throw new ForbiddenException('Solo el propietario puede eliminar la parcela');
 
     return this.prisma.parcelas.delete({ where: { id } });
   }

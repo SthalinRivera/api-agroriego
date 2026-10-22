@@ -31,8 +31,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new DecimalInterceptor());
   // 4. Configuración de Swagger (OpenAPI)
   const config = new DocumentBuilder()
-    .setTitle('API de Gestión Empresarial')
-    .setDescription('API para administrar empresas, clientes, operaciones, etc. (sin borrado físico)')
+    .setTitle('Agroriego API')
+    .setDescription('Gestión de parcelas, cultivos, sensores y riego inteligente')
     .setVersion('1.0')
     .addBearerAuth() // si usas autenticación JWT
     .build();

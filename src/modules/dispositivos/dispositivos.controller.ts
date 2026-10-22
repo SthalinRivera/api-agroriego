@@ -30,9 +30,9 @@ export class DispositivosController {
   }
 
   @Post('heartbeat')
-  @ApiOperation({ summary: 'Heartbeat del dispositivo (público con device_uid)' })
-  async heartbeat(@Body() dto: DeviceHeartbeatDto) {
-    return this.dispositivosService.heartbeat(dto);
+  @ApiOperation({ summary: 'Heartbeat de un dispositivo autorizado' })
+  async heartbeat(@Body() dto: DeviceHeartbeatDto, @Req() req: any) {
+    return this.dispositivosService.heartbeat(dto, req.user.id);
   }
 
   @Get(':id')

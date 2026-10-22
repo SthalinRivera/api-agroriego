@@ -20,12 +20,12 @@ export class NotificacionesService {
         skip,
         take: limit,
         orderBy: { created_at: 'desc' },
-        include: { alertas: { select: { id: true, titulo: true, tipo: true } } },
+        include: { alertas: { select: { id: true, titulo: true, tipo: true, prioridad: true } } },
       }),
       this.prisma.notificaciones.count({ where }),
     ]);
 
-    return { data, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    return { data: data.map(item => ({ ...item, prioridad: item.alertas?.prioridad ?? (item.data as any)?.prioridad ?? 'media', data: { ...(item.data as any), push: undefined } })), meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
   }
 
   async getNoLeidasCount(userId: string) {
@@ -41,7 +41,7 @@ export class NotificacionesService {
 
     return this.prisma.notificaciones.update({
       where: { id },
-      data: { leida: dto.leida ?? true, read_at: dto.leida ? new Date() : null },
+      data: { leida: dto.leida ?? true, read_at: (dto.leida ?? true) ? new Date() : null },
     });
   }
 
@@ -53,21 +53,20 @@ export class NotificacionesService {
   }
 
   async createFromAlerta(alertaId: string, usuariosIds: string[]) {
-    const alerta = await this.prisma.alertas.findUnique({
-      where: { id: alertaId },
-      select: { id: true, titulo: true, mensaje: true, tipo: true },
-    });
+    const alerta = await this.prisma.alertas.findUnique({ where: { id: alertaId }, include: { parcelas: { include: { parcela_usuarios: true, configuracion_alertas: true } } } });
     if (!alerta) throw new NotFoundException('Alerta no encontrada');
-
-    const data = usuariosIds.map(usuarioId => ({
-      usuario_id: usuarioId,
-      alerta_id: alertaId,
-      titulo: alerta.titulo,
-      mensaje: alerta.mensaje,
-      tipo: alerta.tipo,
-      leida: false,
-    }));
-
-    return this.prisma.notificaciones.createMany({ data });
+    if (alerta.parcelas.configuracion_alertas?.notificaciones_activas === false) return { count: 0 };
+    const allowed = new Set([alerta.parcelas.propietario_id, ...alerta.parcelas.parcela_usuarios.map(u => u.usuario_id)]);
+    return this.prisma.$transaction(async tx => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'notifications:' + alerta.parcela_id}))`;
+      let count = 0;
+      for (const usuario_id of new Set(usuariosIds)) {
+        if (!allowed.has(usuario_id) || await tx.notificaciones.findFirst({ where: { alerta_id: alertaId, usuario_id } })) continue;
+        await tx.notificaciones.create({ data: { usuario_id, alerta_id: alertaId, titulo: alerta.titulo, mensaje: alerta.mensaje, tipo: alerta.tipo.slice(0, 50),
+          data: { prioridad: alerta.prioridad, parcela_id: alerta.parcela_id, push: { status: 'pending', attempts: 0, delivered: [] } } } });
+        count++;
+      }
+      return { count };
+    });
   }
 }

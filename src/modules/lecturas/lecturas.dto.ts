@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, IsArray, ValidateNested, IsDateString, IsIn } from 'class-validator';
+import { IsInt, IsString, IsOptional, IsNumber, IsUUID, IsDecimal, Min, Max, IsArray, ValidateNested, IsDateString, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -9,19 +9,19 @@ export class CreateLecturaDto {
 
   @ApiProperty({ example: 45.5 })
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valor!: number;
 
   @ApiPropertyOptional({ example: 45.3 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   valorRaw?: number;
 
   @ApiPropertyOptional({ example: 95.0 })
   @IsOptional()
   @Type(() => Number)
-  @IsDecimal()
+  @IsNumber()
   @Min(0)
   @Max(100)
   calidad?: number;
@@ -48,14 +48,14 @@ export class LecturaQueryDto {
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ example: 100 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(1000)
   limit?: number = 100;
@@ -96,7 +96,7 @@ export class LatestLecturasQueryDto {
   @ApiPropertyOptional({ example: 50 })
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(200)
   limit?: number = 50;

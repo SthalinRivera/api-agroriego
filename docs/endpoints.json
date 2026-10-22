@@ -1,0 +1,318 @@
+[
+  {
+    "method": "GET",
+    "path": "/"
+  },
+  {
+    "method": "GET",
+    "path": "/profile"
+  },
+  {
+    "method": "POST",
+    "path": "/alertas"
+  },
+  {
+    "method": "GET",
+    "path": "/alertas"
+  },
+  {
+    "method": "GET",
+    "path": "/alertas/count"
+  },
+  {
+    "method": "GET",
+    "path": "/alertas/parcela/:parcelaId/activas"
+  },
+  {
+    "method": "GET",
+    "path": "/alertas/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/alertas/:id/atender"
+  },
+  {
+    "method": "PUT",
+    "path": "/alertas/:id/resolver"
+  },
+  {
+    "method": "PUT",
+    "path": "/alertas/:id/descartar"
+  },
+  {
+    "method": "GET",
+    "path": "/auth/profile"
+  },
+  {
+    "method": "POST",
+    "path": "/configuracion-alertas"
+  },
+  {
+    "method": "GET",
+    "path": "/configuracion-alertas/:parcelaId"
+  },
+  {
+    "method": "DELETE",
+    "path": "/configuracion-alertas/:parcelaId"
+  },
+  {
+    "method": "POST",
+    "path": "/cultivos"
+  },
+  {
+    "method": "GET",
+    "path": "/cultivos"
+  },
+  {
+    "method": "GET",
+    "path": "/cultivos/parcela/:parcelaId"
+  },
+  {
+    "method": "GET",
+    "path": "/cultivos/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/cultivos/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/cultivos/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/dispositivos"
+  },
+  {
+    "method": "GET",
+    "path": "/dispositivos"
+  },
+  {
+    "method": "GET",
+    "path": "/dispositivos/parcela/:parcelaId"
+  },
+  {
+    "method": "POST",
+    "path": "/dispositivos/heartbeat"
+  },
+  {
+    "method": "GET",
+    "path": "/dispositivos/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/dispositivos/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/dispositivos/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/lecturas"
+  },
+  {
+    "method": "POST",
+    "path": "/lecturas/batch"
+  },
+  {
+    "method": "GET",
+    "path": "/lecturas"
+  },
+  {
+    "method": "GET",
+    "path": "/lecturas/tendencia-humedad"
+  },
+  {
+    "method": "GET",
+    "path": "/lecturas/latest"
+  },
+  {
+    "method": "GET",
+    "path": "/lecturas/sensor/:sensorId/estadisticas"
+  },
+  {
+    "method": "POST",
+    "path": "/modelos-ia"
+  },
+  {
+    "method": "GET",
+    "path": "/modelos-ia"
+  },
+  {
+    "method": "GET",
+    "path": "/modelos-ia/activo"
+  },
+  {
+    "method": "GET",
+    "path": "/modelos-ia/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/modelos-ia/:id/metricas"
+  },
+  {
+    "method": "PUT",
+    "path": "/modelos-ia/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/modelos-ia/:id/activar"
+  },
+  {
+    "method": "DELETE",
+    "path": "/modelos-ia/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/notificaciones"
+  },
+  {
+    "method": "GET",
+    "path": "/notificaciones/no-leidas/count"
+  },
+  {
+    "method": "PUT",
+    "path": "/notificaciones/:id/leer"
+  },
+  {
+    "method": "PUT",
+    "path": "/notificaciones/leer-todas"
+  },
+  {
+    "method": "POST",
+    "path": "/parcelas"
+  },
+  {
+    "method": "GET",
+    "path": "/parcelas"
+  },
+  {
+    "method": "GET",
+    "path": "/parcelas/dashboard/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/parcelas/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/parcelas/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/parcelas/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/predicciones/predict"
+  },
+  {
+    "method": "POST",
+    "path": "/predicciones"
+  },
+  {
+    "method": "GET",
+    "path": "/predicciones"
+  },
+  {
+    "method": "GET",
+    "path": "/predicciones/latest/:parcelaId"
+  },
+  {
+    "method": "GET",
+    "path": "/predicciones/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/reportes"
+  },
+  {
+    "method": "GET",
+    "path": "/reportes"
+  },
+  {
+    "method": "GET",
+    "path": "/reportes/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/reportes/:id/ia"
+  },
+  {
+    "method": "DELETE",
+    "path": "/reportes/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/riegos"
+  },
+  {
+    "method": "GET",
+    "path": "/riegos"
+  },
+  {
+    "method": "GET",
+    "path": "/riegos/parcela/:parcelaId"
+  },
+  {
+    "method": "GET",
+    "path": "/riegos/parcela/:parcelaId/en-curso"
+  },
+  {
+    "method": "GET",
+    "path": "/riegos/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/riegos/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/riegos/:id/finalizar"
+  },
+  {
+    "method": "PUT",
+    "path": "/riegos/:id/cancelar"
+  },
+  {
+    "method": "POST",
+    "path": "/sensores/tipos"
+  },
+  {
+    "method": "GET",
+    "path": "/sensores/tipos"
+  },
+  {
+    "method": "GET",
+    "path": "/sensores/tipos/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/sensores"
+  },
+  {
+    "method": "GET",
+    "path": "/sensores"
+  },
+  {
+    "method": "GET",
+    "path": "/sensores/dispositivo/:dispositivoId"
+  },
+  {
+    "method": "GET",
+    "path": "/sensores/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/sensores/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/sensores/:id/calibrar"
+  },
+  {
+    "method": "DELETE",
+    "path": "/sensores/:id"
+  }
+]
