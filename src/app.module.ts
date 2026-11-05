@@ -1,3 +1,4 @@
+import { GestionModule } from './modules/gestion/gestion.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';          // ← 1. importar
 import { AppController } from './app.controller';
@@ -36,6 +37,7 @@ import { ReportesModule } from './modules/reportes/reportes.module';
     ConfiguracionAlertasModule,
     ModelosIAModule,
     ReportesModule,
+    GestionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -37,6 +37,7 @@ export class AuthService {
     const roles = [{
       id: Number(profile.roles.id),
       nombre: profile.roles.nombre,
+      codigo: profile.roles.codigo,
       descripcion: profile.roles.descripcion,
     }];
 
