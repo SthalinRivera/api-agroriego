@@ -1,3 +1,4 @@
+import { AutomaticFichasService, AutomaticQuery } from './fichas.automatic';
 import {
   Body,
   Controller,
@@ -23,7 +24,60 @@ type UserRequest = { user: { id: string } };
 @Controller('fichas-iot')
 @UseGuards(SupabaseAuthGuard)
 export class FichasController {
-  constructor(private readonly service: FichasService) {}
+  constructor(
+    private readonly service: FichasService,
+    private readonly automatic: AutomaticFichasService,
+  ) {}
+  @Get('automaticas') async automaticas(
+    @Query() query: AutomaticQuery,
+    @Req() req: UserRequest,
+  ) {
+    const { snapshot, tables } = await this.automatic.collect(
+      req.user.id,
+      query,
+    );
+    return {
+      cutoff: snapshot.cutoff,
+      tables: tables.map((t) => ({
+        ...t,
+        total: t.rows.length,
+        rows: t.rows.slice(0, 10),
+      })),
+    };
+  }
+  @Get('automaticas/pdf') async automaticPdf(
+    @Query() query: AutomaticQuery,
+    @Req() req: UserRequest,
+    @Res() res: Response,
+  ) {
+    const { snapshot, tables } = await this.automatic.collect(
+      req.user.id,
+      query,
+    );
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="fichas-iot.pdf"',
+      'Cache-Control': 'no-store',
+    });
+    await writePdf(snapshot, res, tables);
+  }
+  @Get('automaticas/excel') async automaticExcel(
+    @Query() query: AutomaticQuery,
+    @Req() req: UserRequest,
+    @Res() res: Response,
+  ) {
+    const { snapshot, tables } = await this.automatic.collect(
+      req.user.id,
+      query,
+    );
+    res.set({
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Disposition': 'attachment; filename="fichas-iot.xlsx"',
+      'Cache-Control': 'no-store',
+    });
+    await writeExcel(snapshot, res, tables);
+  }
   @Get('opciones') options(@Req() req: UserRequest) {
     return this.service.options(req.user.id);
   }

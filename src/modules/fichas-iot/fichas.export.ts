@@ -1,3 +1,4 @@
+import type { AutomaticTable } from './fichas.automatic';
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import type { Writable } from 'node:stream';
@@ -82,7 +83,11 @@ export const dictionaryRows = (): Row[] => [
   ...bColumns.map((c) => ({ campo: `B.${c.key}`, descripcion: c.label })),
   ...LEGEND.map((descripcion, i) => ({ campo: `Regla ${i + 1}`, descripcion })),
 ];
-export async function writeExcel(s: Snapshot, output: Writable) {
+export async function writeExcel(
+  s: Snapshot,
+  output: Writable,
+  tables?: AutomaticTable[],
+) {
   const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
     stream: output,
     useStyles: true,
@@ -150,6 +155,34 @@ export async function writeExcel(s: Snapshot, output: Writable) {
     }
     ws.commit();
   };
+  if (tables) {
+    for (const t of tables) {
+      await sheet(
+        `Ficha ${t.id}`,
+        t.columns,
+        t.rows.length
+          ? t.rows
+          : [{ [t.columns[0].key]: 'Sin datos disponibles' }],
+      );
+    }
+    await sheet(
+      'Información',
+      [
+        { key: 'campo', label: 'Ficha' },
+        { key: 'valor', label: 'Información' },
+      ],
+      [
+        { campo: 'Corte (America/Lima)', valor: s.cutoff },
+        { campo: 'Periodo', valor: s.general.Periodo },
+        ...tables.flatMap((t) => [
+          { campo: `Ficha ${t.id}`, valor: t.title },
+          ...t.notes.map((valor) => ({ campo: `Ficha ${t.id}`, valor })),
+        ]),
+      ],
+    );
+    await workbook.commit();
+    return;
+  }
   await sheet(
     'Datos generales',
     [
@@ -171,7 +204,11 @@ export async function writeExcel(s: Snapshot, output: Writable) {
   );
   await workbook.commit();
 }
-export async function writePdf(s: Snapshot, output: Writable) {
+export async function writePdf(
+  s: Snapshot,
+  output: Writable,
+  tables?: AutomaticTable[],
+) {
   const doc = new PDFDocument({
     autoFirstPage: false,
     compress: true,
@@ -205,7 +242,9 @@ export async function writePdf(s: Snapshot, output: Writable) {
       .font('Helvetica-Bold')
       .fontSize(11)
       .text(
-        `Anexo ${s.general.Anexo || 'sin número'} · Ficha de registro IoT`,
+        tables
+          ? 'Fichas de registro IoT'
+          : `Anexo ${s.general.Anexo || 'sin número'} · Ficha de registro IoT`,
         38,
         28,
         { width: doc.page.width - 76 },
@@ -315,6 +354,26 @@ export async function writePdf(s: Snapshot, output: Writable) {
     }
   };
   try {
+    if (tables) {
+      for (const t of tables) {
+        await table(`${t.id}. ${t.title}`, t.columns, t.rows, true);
+        await table(
+          `Ficha ${t.id} · Información`,
+          [
+            { key: 'campo', label: 'Campo' },
+            { key: 'valor', label: 'Detalle' },
+          ],
+          [
+            { campo: 'Finalidad', valor: t.description },
+            { campo: 'Periodo', valor: s.general.Periodo },
+            ...t.notes.map((valor) => ({ campo: 'Información', valor })),
+          ],
+        );
+      }
+      doc.end();
+      await completion;
+      return;
+    }
     await table(
       TITLE,
       [
