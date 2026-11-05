@@ -55,3 +55,19 @@ describe('Administrative access', () => {
     expect(prisma.profiles.update).not.toHaveBeenCalled();
   });
 });
+
+describe('Sharing and prediction evaluation', () => {
+  it('rejects sharing by non-owners before looking up the target account', async () => {
+    const prisma: any = { parcelas: { findFirst: jest.fn().mockResolvedValue(null) }, profiles: { findFirst: jest.fn() } };
+    const controller = new GestionController(prisma);
+    await expect(controller.compartir({ parcelaId: 'parcel', usuarioEmail: 'member@example.com', nivelAcceso: 'lector' }, { user: { id: 'not-owner' } })).rejects.toThrow(ForbiddenException);
+    expect(prisma.profiles.findFirst).not.toHaveBeenCalled();
+  });
+  it('preserves the access boundary and handles zero observed humidity without division by zero', async () => {
+    const prisma: any = { predicciones: { findFirst: jest.fn().mockResolvedValue({ id: 'prediction', humedad_predicha: 20, tiempo_riego_horas: 1, volumen_riego_litros: 50 }) }, evaluaciones_prediccion: { create: jest.fn() } };
+    const controller = new GestionController(prisma);
+    await controller.evaluar({ prediccionId: 'prediction', humedadObservada: 0 }, { user: { id: 'user' } });
+    expect(prisma.predicciones.findFirst.mock.calls[0][0].where.parcelas.OR).toContainEqual({ propietario_id: 'user' });
+    expect(prisma.evaluaciones_prediccion.create).toHaveBeenCalledWith({ data: expect.objectContaining({ error_absoluto: 20, error_porcentual: null }) });
+  });
+});
