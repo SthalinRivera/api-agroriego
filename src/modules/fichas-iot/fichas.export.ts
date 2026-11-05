@@ -1,4 +1,8 @@
 import type { AutomaticTable } from './fichas.automatic';
+// PDFKit loads these through createRequire at runtime. Static imports also
+// make serverless dependency tracing retain the fonts and their shared chunks.
+import 'pdfkit/standard-fonts/Helvetica';
+import 'pdfkit/standard-fonts/HelveticaBold';
 import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import type { Writable } from 'node:stream';
