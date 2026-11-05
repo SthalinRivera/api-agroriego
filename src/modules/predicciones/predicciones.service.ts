@@ -61,7 +61,7 @@ export class PrediccionesService {
         volumen_riego_litros: prediccion.volumenRiegoLitros,
         demanda_hidrica_litros: prediccion.demandaHidricaLitros,
         confianza: prediccion.confianza,
-        output_data: prediccion.outputData,
+        output_data: { ...prediccion.outputData, simulado: true },
         inference_time_ms: prediccion.inferenceTimeMs,
       },
       include: { modelos_ia: true, parcelas: { select: { id: true, nombre: true } } },

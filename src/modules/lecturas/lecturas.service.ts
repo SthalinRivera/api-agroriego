@@ -70,7 +70,7 @@ export class LecturasService {
         valor_raw: dto.valorRaw,
         calidad: dto.calidad,
         recorded_at: dto.recordedAt ? new Date(dto.recordedAt) : new Date(),
-        metadata: dto.metadata || {},
+        metadata: { ...dto.metadata, measurement_time_source: dto.recordedAt ? 'provided' : 'server_receipt' },
       },
       include: { sensores: { include: { tipos_sensor: true } } },
     });
@@ -104,13 +104,15 @@ export class LecturasService {
       valor_raw: l.valorRaw,
       calidad: l.calidad,
       recorded_at: l.recordedAt ? new Date(l.recordedAt) : new Date(),
-      metadata: l.metadata || {},
+      metadata: { ...l.metadata, measurement_time_source: l.recordedAt ? 'provided' : 'server_receipt' },
     }));
 
     return this.prisma.lecturas.createMany({ data, skipDuplicates: false });
   }
   // NUEVO MÉTODO PARA EL ESP32
   async createFromDevice(dto: DeviceLecturaDto) {
+    const receivedAt = new Date();
+    if (dto.measured_at && new Date(dto.measured_at) > receivedAt) throw new BadRequestException('La fecha de medición no puede ser futura');
     // 1. Buscar el dispositivo por su device_uid
     const dispositivo = await this.prisma.dispositivos.findUnique({
       where: { device_uid: dto.device_uid },
@@ -158,8 +160,9 @@ export class LecturasService {
         lecturasAInsertar.push({
           sensor_id: sensor.id,
           valor: valor,
-          recorded_at: new Date(),
-          metadata: { source: 'ESP32_Wokwi' }
+          recorded_at: dto.measured_at ? new Date(dto.measured_at) : receivedAt,
+          created_at: receivedAt,
+          metadata: { source: 'ESP32_Wokwi', measurement_time_source: dto.measured_at ? 'device' : 'server_receipt', ...(dto.message_id ? { message_id: dto.message_id } : {}) }
         });
       }
     }

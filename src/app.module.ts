@@ -1,3 +1,4 @@
+import { FichasModule } from './modules/fichas-iot/fichas.module';
 import { GestionModule } from './modules/gestion/gestion.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';          // ← 1. importar
@@ -38,6 +39,7 @@ import { ReportesModule } from './modules/reportes/reportes.module';
     ModelosIAModule,
     ReportesModule,
     GestionModule,
+    FichasModule,
   ],
   controllers: [AppController],
   providers: [AppService],
