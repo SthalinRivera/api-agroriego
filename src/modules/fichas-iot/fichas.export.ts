@@ -1,9 +1,6 @@
 import type { AutomaticTable } from './fichas.automatic';
-// PDFKit loads these through createRequire at runtime. Static imports also
-// make serverless dependency tracing retain the fonts and their shared chunks.
-import 'pdfkit/standard-fonts/Helvetica';
-import 'pdfkit/standard-fonts/HelveticaBold';
 import PDFDocument from 'pdfkit';
+import embeddedFonts from './fonts/lato.json';
 import ExcelJS from 'exceljs';
 import type { Writable } from 'node:stream';
 import { finished } from 'node:stream/promises';
@@ -215,6 +212,9 @@ export async function writePdf(
 ) {
   const doc = new PDFDocument({
     autoFirstPage: false,
+    // PDFKit accepts null to skip loading its default Helvetica font.
+    // @types/pdfkit only declares string for this runtime-supported option.
+    font: null as unknown as string,
     compress: true,
     info: {
       Title: TITLE,
@@ -222,6 +222,12 @@ export async function writePdf(
       CreationDate: new Date(s.cutoff),
     },
   });
+  doc.registerFont(
+    'Agro-Regular',
+    Buffer.from(embeddedFonts.regular, 'base64'),
+  );
+  doc.registerFont('Agro-Bold', Buffer.from(embeddedFonts.bold, 'base64'));
+  doc.font('Agro-Regular');
   const completion = finished(output);
   // A destination disconnect aborts production rather than retaining an unbounded buffer.
   output.on('error', () => doc.destroy());
@@ -243,7 +249,7 @@ export async function writePdf(
     page++;
     doc
       .fillColor('black')
-      .font('Helvetica-Bold')
+      .font('Agro-Bold')
       .fontSize(11)
       .text(
         tables
@@ -254,7 +260,7 @@ export async function writePdf(
         { width: doc.page.width - 76 },
       );
     doc
-      .font('Helvetica')
+      .font('Agro-Regular')
       .fontSize(7)
       .text(
         `${s.code} · Corte ${formatDate(s.cutoff)} · America/Lima`,
@@ -270,7 +276,7 @@ export async function writePdf(
     y = 68;
   };
   const drawRow = (values: string[], bold: boolean) => {
-    doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(fontSize);
+    doc.font(bold ? 'Agro-Bold' : 'Agro-Regular').fontSize(fontSize);
     const height =
       Math.max(
         ...values.map((v, i) =>
@@ -292,7 +298,7 @@ export async function writePdf(
   };
   const header = () => {
     doc
-      .font('Helvetica-Bold')
+      .font('Agro-Bold')
       .fontSize(12)
       .text(title, 38, y, { width: doc.page.width - 76 });
     y += doc.heightOfString(title, { width: doc.page.width - 76 }) + 12;
@@ -324,7 +330,7 @@ export async function writePdf(
     header();
     if (!rows.length) {
       doc
-        .font('Helvetica')
+        .font('Agro-Regular')
         .fontSize(10)
         .text('Sin registros para los filtros seleccionados.', 38, y + 15);
       return;
@@ -335,7 +341,7 @@ export async function writePdf(
           ? String(row.estado)
           : display(row[c.key], c.key, row),
       );
-      doc.font('Helvetica').fontSize(fontSize);
+      doc.font('Agro-Regular').fontSize(fontSize);
       const height =
         Math.max(
           ...values.map((v, i) =>
